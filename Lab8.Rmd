@@ -1,0 +1,19 @@
+---
+title: "Lab 8 - Linear Regression in R"
+author: "Priscilla Hare"
+date: "November 20, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Step 1: load the tidyverse package and hte 'salmon_imports.csv' file
+```{r}
+
+library(tidyverse)
+salmon <- read_csv('salmon_imports.csv')
+
+```
+
