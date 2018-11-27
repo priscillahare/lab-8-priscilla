@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Step 1: load the tidyverse package and hte 'salmon_imports.csv' file
+##Step 1: load the tidyverse package and hte 'salmon_imports.csv' file
 ```{r}
 
 library(tidyverse)
@@ -17,3 +17,107 @@ salmon <- read_csv('salmon_imports.csv')
 
 ```
 
+
+##Make an exploratory scatter plot
+```{r}
+
+salmon_scatter <- salmon %>% 
+  ggplot(aes(x = year, y = salmon_fresh))+
+  geom_point()
+
+salmon_scatter
+
+#Overall it looks linear but with some variation. Concernsa re the few spikes
+```
+
+##Linear regression:
+-perform linear regression
+-call the model name
+-write out the model equation including actual variables and coefficients
+-think about the model
+```{r}
+# format for linear regression is 
+# model_name <- lm(y_variable ~ x_variable, data - df_name)
+
+salmon_model <- lm(salmon_fresh ~ year, data = salmon)
+salmon_model
+
+# imports(tons) = -14982940 + 7550 (year)
+
+```
+####What does the slope mean?
+The slope tells us how much slamon imports increase by each year
+####What does the y -intercept mean. Why is it concerning? What does this mean about extrapolating this model for past values?
+The y - intercept means that at year = 0 there is a negative salmon import. This does not make sense. For extrapolating for past values a limit on how fat back needs to be set so the model makes sense. 
+
+##Model Diagnostics
+-use plot(model_name) to view model diagnostics
+-do residuals appear normally distirbuted
+-any concerns about heteroscedasticity or outliers
+```{r}
+par(mfrow = c(2,2)) #use to view all graphs from plot at once
+plot(salmon_model)
+
+#residauls appear noramlly distrubuted
+# some concerns about heteroscedasticitity
+#maybe a few outliers
+```
+
+##Explore fit and model signigicance
+-does year significantly predict salmon imports
+-what does the R^2^ value mean in words
+-what proportion of the variance in salmon imports is NOT explained by year
+```{r}
+summary(salmon_model)
+
+#p < .001 
+```
+Year significantly predicts salmon imports
+The R^2^ value means that 94.6% of the variance in salmon imports can be predicted by the year.
+5.4% is not explained by year
+
+##Prepare a final graph
+```{r}
+
+salmon_final_graph <- salmon %>% 
+  ggplot(aes(x = year, y = salmon_fresh))+
+  geom_point()+
+  geom_smooth(method = lm, se = TRUE, size = 0.5, color = "gray20") + #plots the linear model with a confidence interval (se)
+  theme_bw() +
+  labs(x = "Year", y = "U.S. Annual Fresh Salmon Imports\n(1,000 pounds)", title = "Salmon Imports Model") +
+  scale_x_continuous(expand = c(0,0), limits = c(1990, 2017))
+
+salmon_final_graph
+```
+
+##Make predictions using the model
+Lets say we want to make predictions for the years 2022, 2024, 2026, and 2028
+```{r}
+
+new_years <- data.frame(year = c(2022, 2024, 2026, 2028)) #creates a new data frame with thte years we want to predict using our model
+
+#now feed this new data frame into the predict() function 
+
+future_predict <- predict(salmon_model, newdata = new_years, interval = "confidence")
+
+future_predict
+
+predictions <- data.frame(new_years, future_predict)
+
+predictions  #a new data frame that binds the predictions to the years
+
+```
+
+##Find Pearson's r (correlation)
+```{r}
+
+salmon_cor <- cor.test(salmon$year, salmon$salmon_fresh)
+
+salmon_cor
+
+#r=.974...strong positve correlation
+```
+
+##Concluding Statement
+
+Year significantly predicts salmon imports (b = 7.550e+03, t(26) = 21.72, p < 0.001) with a strong postive correlation between the two (Pearson's r = 0.974). The overall model (imports(tons) = -14982940 + 7550 (year)) explains a significant amoint of variacne in imports (F(1,26) = 472, p < 0.001, R^2^ = 0.95).
